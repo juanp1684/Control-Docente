@@ -1,0 +1,138 @@
+from django.views import View
+from .models import Schedule
+from .models import User
+from .models import Report
+from django.http.response import JsonResponse
+from django.http import HttpResponse, Http404
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import send_mail
+from datetime import datetime
+import json
+import pytz
+import sys
+sys.path.append("..") # Adds higher directory to python modules path.
+from control_API.settings import EMAIL_HOST_USER
+
+# Create your views here.
+
+SCHEDULES_MISSING_MESSAGE = "Schedule missing"
+REPORTS_MISSING_MESSAGE = "Report missing"
+USER_NOT_FOUND_MESSAGE = "User not found"
+REPORT_MAIL_SUBJECT = "Aplicacion control docente"
+MISSED_REPORT_MAIL_MESSAGE = "Se detecto la *omision* de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}"
+FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
+BOLIVIA_TIMEZONE = pytz.timezone('America/La_Paz')
+
+class ScheduleView(View):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        request_codsis = request.GET.get('codsis')
+        if request_codsis != None:
+            schedules = list(Schedule.objects.filter(user_id=request_codsis).order_by(
+                'day_of_week', 'start_time').values())
+            if len(schedules) > 0:
+                response = {'message': f"Found Schedules for: {request_codsis}", 'schedules': schedules}
+                user = User.objects.get(codsis=request_codsis)
+                user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
+                user.save()
+            else:
+                bad_request_response = HttpResponse(f"Schedule missing for codsis: {request_codsis}")
+                bad_request_response.status_code = 400
+                return bad_request_response
+        else:
+            schedules = list(Schedule.objects.order_by(
+                'day_of_week', 'start_time').values())
+            if len(schedules) > 0:
+                response = {'message': "Schedules found",
+                            'schedules': schedules}
+            else:
+                response = {'message': SCHEDULES_MISSING_MESSAGE}
+        return JsonResponse(response)
+
+    def post(self, request):
+        rb = json.loads(request.body)
+        users = list(User.objects.filter(codsis=rb['codsis']).values())
+        response = {'message': "Invalid codsis, no related user found"}
+        if len(users) > 0:
+            Schedule.objects.create(user_id=rb['codsis'],
+                                    start_time=rb['start_time'], end_time=rb['end_time'], day_of_week=rb['day_of_week'])
+            response = {'message': "success"}
+        return JsonResponse(response)
+
+    def put(self, request):
+        id_to_be_updated = request.GET.get('id')
+        rb = json.loads(request.body)
+        schedules = list(Schedule.objects.filter(id=id_to_be_updated).values())
+        response = {'message': SCHEDULES_MISSING_MESSAGE}
+        if len(schedules) > 0:
+            schedule_found = Schedule.objects.get(id=id_to_be_updated)
+            schedule_found.codsis = rb['codsis']
+            schedule_found.start_time = rb['start_time']
+            schedule_found.end_time = rb['end_time']
+            schedule_found.day_of_week = rb['day_of_week']
+            schedule_found.save()
+            response = {'message': "Success update"}
+
+        return JsonResponse(response)
+
+    def delete(self, request):
+        id_to_be_deleted = request.GET.get('id')
+        schedules = list(Schedule.objects.filter(id=id_to_be_deleted).values())
+        response = {'message': SCHEDULES_MISSING_MESSAGE}
+        if len(schedules) > 0:
+            Schedule.objects.get(id=id_to_be_deleted).delete()
+            response = {'message': "Success delete"}
+
+        return JsonResponse(response)
+
+
+class ReportView(View):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        codsis = request.GET.get('codsis')
+        response = {'message': REPORTS_MISSING_MESSAGE}
+        if codsis is not None:
+            reports = list(Report.objects.values())
+            if len(reports) > 0:
+                response = {'message': "Reports found",
+                            'reports': reports}
+        else:
+            response = {'message': USER_NOT_FOUND_MESSAGE}
+        return JsonResponse(response)
+
+    def post(self, request):
+        rb = json.loads(request.body)
+        users = list(User.objects.filter(codsis=rb['codsis']).values())
+        schedules = list(Schedule.objects.filter(id=rb['schedule_id']).values())
+        response = {'message': "Invalid codsis, no related user found"}
+        if len(users) > 0 and len(schedules) > 0:
+            report = Report.objects.create(user_id=rb['codsis'], schedule_id=rb['schedule_id'],
+                                attempts=rb['attempts'], report_type=rb['report_type'], report_time=datetime.now(BOLIVIA_TIMEZONE))
+            response = {'message': "success"}
+            reported_user = User.objects.get(codsis=rb['codsis'])
+            if (rb['report_type'] == "fallido"):
+                send_mail(subject=REPORT_MAIL_SUBJECT,
+                    message=FAILED_REPORT_MAIL_MESSAGE, recipient_list=[reported_user.contact_mail],
+                    from_email=EMAIL_HOST_USER)
+            if (rb['report_type'] == "omision"):
+                send_mail(subject=REPORT_MAIL_SUBJECT,
+                    message=MISSED_REPORT_MAIL_MESSAGE.format(report.pk), recipient_list=[reported_user.contact_mail],
+                    from_email=EMAIL_HOST_USER)
+            reported_user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
+            reported_user.save()
+        return JsonResponse(response)
+
+    def put(self, request):
+        pass # Unnecesary for now
+
+    def delete(self, request):
+        pass # Unnecesary for now
