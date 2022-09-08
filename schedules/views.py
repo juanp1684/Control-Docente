@@ -20,7 +20,7 @@ SCHEDULES_MISSING_MESSAGE = "Schedule missing"
 REPORTS_MISSING_MESSAGE = "Report missing"
 USER_NOT_FOUND_MESSAGE = "User not found"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
-MISSED_REPORT_MAIL_MESSAGE = "Se detecto la *omision* de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}"
+MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}"
 FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
 BOLIVIA_TIMEZONE = pytz.timezone('America/La_Paz')
 
