@@ -13,6 +13,7 @@ import pytz
 import sys
 sys.path.append("..") # Adds higher directory to python modules path.
 from control_API.settings import EMAIL_HOST_USER
+from .choices import DAY_CHOICES
 
 # Create your views here.
 
@@ -20,7 +21,7 @@ SCHEDULES_MISSING_MESSAGE = "Schedule missing"
 REPORTS_MISSING_MESSAGE = "Report missing"
 USER_NOT_FOUND_MESSAGE = "User not found"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
-MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}"
+MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {}"
 FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
 BOLIVIA_TIMEZONE = pytz.timezone('America/La_Paz')
 
@@ -123,10 +124,11 @@ class ReportView(View):
                 send_mail(subject=REPORT_MAIL_SUBJECT,
                     message=FAILED_REPORT_MAIL_MESSAGE, recipient_list=[reported_user.contact_mail],
                     from_email=EMAIL_HOST_USER)
+            reported_schedule = Schedule.objects.get(id=rb['schedule_id'])
             if (rb['report_type'] == "omision"):
                 send_mail(subject=REPORT_MAIL_SUBJECT,
-                    message=MISSED_REPORT_MAIL_MESSAGE.format(report.pk), recipient_list=[reported_user.contact_mail],
-                    from_email=EMAIL_HOST_USER)
+                    message=MISSED_REPORT_MAIL_MESSAGE.format(report.pk, reported_schedule.start_time, reported_schedule.end_time, DAY_CHOICES[reported_schedule.day_of_week][1]),
+                     recipient_list=[reported_user.contact_mail], from_email=EMAIL_HOST_USER)
             reported_user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
             reported_user.save()
         return JsonResponse(response)
