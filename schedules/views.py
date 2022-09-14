@@ -162,7 +162,7 @@ class LoginView(View):
         codsis = rb['codsis']
         password = rb['password']
         
-        user = User.objects.get(codsis=codsis)
+        user = User.objects.filter(codsis=codsis).first()
 
         if user is None:
             return failed_auth_response(message=USER_NOT_FOUND_MESSAGE)
