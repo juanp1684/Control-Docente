@@ -2,8 +2,8 @@ from django.views import View
 from .models import Schedule
 from .models import User
 from .models import Report
-from django.http.response import JsonResponse
-from django.http import HttpResponse, Http404
+from django.contrib.auth.hashers import check_password
+from django.http.response import JsonResponse, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
@@ -11,8 +11,9 @@ from datetime import datetime
 import json
 import pytz
 import sys
+import jwt
 sys.path.append("..") # Adds higher directory to python modules path.
-from control_API.settings import EMAIL_HOST_USER
+from control_API.settings import EMAIL_HOST_USER, SECRET
 from .choices import DAY_CHOICES
 
 # Create your views here.
@@ -20,10 +21,16 @@ from .choices import DAY_CHOICES
 SCHEDULES_MISSING_MESSAGE = "Schedule missing"
 REPORTS_MISSING_MESSAGE = "Report missing"
 USER_NOT_FOUND_MESSAGE = "User not found"
+INCORRECT_PASSWORD_MESSAGE = "Incorrect password"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
 MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {}"
 FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
 BOLIVIA_TIMEZONE = pytz.timezone('America/La_Paz')
+
+def failed_auth_response(message="You are not authenticated"):
+    failed_auth_response = JsonResponse({'message': message})
+    failed_auth_response.status_code = 401
+    return failed_auth_response
 
 class ScheduleView(View):
 
@@ -128,7 +135,7 @@ class ReportView(View):
             if (rb['report_type'] == "omision"):
                 send_mail(subject=REPORT_MAIL_SUBJECT,
                     message=MISSED_REPORT_MAIL_MESSAGE.format(report.pk, reported_schedule.start_time, reported_schedule.end_time, DAY_CHOICES[reported_schedule.day_of_week][1]),
-                     recipient_list=[reported_user.contact_mail], from_email=EMAIL_HOST_USER)
+                    recipient_list=[reported_user.contact_mail], from_email=EMAIL_HOST_USER)
             reported_user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
             reported_user.save()
         return JsonResponse(response)
@@ -138,3 +145,46 @@ class ReportView(View):
 
     def delete(self, request):
         pass # Unnecesary for now
+
+
+class LoginView(View):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        rb = json.loads(request.body)
+        codsis = rb['codsis']
+        password = rb['password']
+        
+        user = User.objects.get(codsis=codsis)
+
+        if user is None:
+            return failed_auth_response(message=USER_NOT_FOUND_MESSAGE)
+
+        if user.password is None:
+            user.password = password
+            user.save()
+        elif not check_password(password=password, encoded=user.password):
+            return failed_auth_response(message=INCORRECT_PASSWORD_MESSAGE)
+        
+        payload = {
+            'codsis': codsis
+        }
+
+        token = jwt.encode(payload, SECRET)
+
+        response = JsonResponse({'message': "success"})
+        response.set_cookie(key='jwt', value=token, httponly=True)
+        return response
+
+    def get (self, request):
+        token = request.COOKIES.get('jwt')
+        if not token:
+            return failed_auth_response()
+        try:
+            payload = jwt.decode(token, SECRET, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return failed_auth_response()
+        return HttpResponse(payload['codsis'])
