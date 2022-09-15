@@ -4,7 +4,6 @@ from .choices import DAY_CHOICES
 
 # Create your models here.
 
-
 class User(models.Model):
     codsis = models.CharField(max_length=10, primary_key=True)
     full_name = models.CharField(max_length=50)
@@ -20,7 +19,6 @@ class User(models.Model):
     class Meta:
         db_table = 'user'
 
-
 class Schedule(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="codsis")
     start_time = models.TimeField()
@@ -31,7 +29,6 @@ class Schedule(models.Model):
     class Meta:
         db_table = 'schedule'
 
-
 class Report(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="codsis")
     schedule = models.ForeignKey(Schedule, on_delete=models.DO_NOTHING, to_field="id")
@@ -41,3 +38,14 @@ class Report(models.Model):
 
     class Meta:
         db_table = 'report'
+
+class AdminUser(models.Model):
+    username = models.CharField(max_length=40, primary_key=True)
+    password = models.CharField(max_length=255, null=True)
+
+    def save(self, **kwargs):
+        self.password = make_password(self.password)
+        super().save(**kwargs)
+
+    class Meta:
+        db_table = 'admin'

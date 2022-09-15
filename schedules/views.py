@@ -1,13 +1,11 @@
 from django.views import View
-from .models import Schedule
-from .models import User
-from .models import Report
+from .models import Schedule, AdminUser, User, Report
 from django.contrib.auth.hashers import check_password
 from django.http.response import JsonResponse, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import pytz
 import sys
@@ -23,6 +21,7 @@ UNRELATED_SCHEDULE_MESSAGE = "Schedule not related to this user"
 REPORTS_MISSING_MESSAGE = "Report missing"
 USER_NOT_FOUND_MESSAGE = "User not found"
 INCORRECT_PASSWORD_MESSAGE = "Incorrect password"
+INVALID_SESSION_MESSAGE = "Invalid session"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
 MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {}"
 FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
@@ -161,7 +160,7 @@ class LoginView(View):
         rb = json.loads(request.body)
         codsis = rb['codsis']
         password = rb['password']
-        
+
         user = User.objects.filter(codsis=codsis).first()
 
         if user is None:
@@ -186,9 +185,64 @@ class LoginView(View):
     def get (self, request):
         token = request.COOKIES.get('jwt')
         if not token:
-            return failed_auth_response()
+            return failed_auth_response("Not logged in")
         try:
             payload = jwt.decode(token, SECRET, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            return failed_auth_response()
+            return failed_auth_response("Session finished, log in again")
+        except jwt.InvalidSignatureError:
+            return failed_auth_response(INVALID_SESSION_MESSAGE)
+        if payload.get('codsis') is None:
+            return failed_auth_response(INVALID_SESSION_MESSAGE)
+
         return HttpResponse(payload['codsis'])
+
+class AdminLoginView(View):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request):
+        rb = json.loads(request.body)
+        username = rb['username']
+        password = rb['password']
+
+        admin = AdminUser.objects.filter(username=username).first()
+
+        if admin is None:
+            return failed_auth_response(message=USER_NOT_FOUND_MESSAGE)
+
+        if admin.password is None:
+            admin.password = password
+            admin.save()
+        elif not check_password(password=password, encoded=admin.password):
+            return failed_auth_response(message=INCORRECT_PASSWORD_MESSAGE)
+        
+        payload = {
+            'exp': datetime.utcnow() + timedelta(hours=16),
+            'admin': True
+        }
+
+        token = jwt.encode(payload, SECRET)
+
+        response = JsonResponse({'message': "success"})
+        response.set_cookie(key='jwt', value=token, httponly=True)
+        return response
+
+    def get (self, request):
+        token = request.COOKIES.get('jwt')
+        if not token:
+            return failed_auth_response("Not logged in")
+        try:
+            payload = jwt.decode(token, SECRET, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return failed_auth_response("Session finished, log in again")
+        except jwt.InvalidSignatureError:
+            return failed_auth_response(INVALID_SESSION_MESSAGE)
+
+        if payload.get('admin') is None:
+            return failed_auth_response(INVALID_SESSION_MESSAGE)
+
+        return HttpResponse(payload['admin'])
+ 
