@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <center>
+            <div class="container">
+                 {% if error %}
+                   <p class="alert alert-danger">{{ error }}</p>
+                 {% endif %}
+                <h1>Inicio de Sesion</h1>
+                <table callpadding="5" cellspacing="2" border="1">
+                    <thead>
+                        <tr>
+                            <th colspan="2" align="center">Formulario Login</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Ingrese su correo Electronico</td>
+                            <td><input type="text" placeholder="Ingrese su correo electrónico" name="username"></td>
+                        </tr>
+
+                        
+                            <td>Password</td>
+                            <td><input type="text" placeholder="Ingrese su constraseña" name="password"></td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" align="center">
+                                <button type="submit">Login</button>
+                                &nbsp;&nbsp;
+                                <button type="reset">Limpiar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+                {% if messages %}
+                   {% for msg in messages%}
+                   <b>{{msg}}</b>
+                   {% endfor %}
+                   {% endif %}
+            </div>
+        </center>
+    </form>
+</body>
+</html>

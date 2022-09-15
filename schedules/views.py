@@ -1,10 +1,14 @@
+
 from django.views import View
 from .models import Schedule, AdminUser, User, Report
 from django.contrib.auth.hashers import check_password
 from django.http.response import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate,login,logout
 from datetime import datetime, timedelta
 import json
 import pytz
@@ -230,7 +234,7 @@ class AdminLoginView(View):
         response.set_cookie(key='jwt', value=token, httponly=True)
         return response
 
-    def get (self, request):
+    """ def get (self, request):
         token = request.COOKIES.get('jwt')
         if not token:
             return failed_auth_response("Not logged in")
@@ -244,5 +248,32 @@ class AdminLoginView(View):
         if payload.get('admin') is None:
             return failed_auth_response(INVALID_SESSION_MESSAGE)
 
-        return HttpResponse(payload['admin'])
+        return HttpResponse(payload['admin']) """
  
+ 
+
+def home(request):
+    usuariosListados = User.objects.all()
+    reportOmisions = Report.objects.filter(report_type='omision')
+    reportErrores= Report.objects.filter(report_type='fallido')
+    return render(request,"feed.html",{"usuarios": usuariosListados,
+                                     "omisiones":reportOmisions, 
+                                     "fallidos":reportErrores})
+
+def login_user(request):
+    if request.method == 'POST':
+        username=request.POST['username']
+        password = request.POST['password']
+        
+        techer = authenticate(request,username=username,password=password)
+        if techer:
+            login(request,techer)
+            return redirect('home')
+        else:
+            return render(request, 'registration/login.html',{'error':'Datos invalidos'})
+    return render(request, 'registration/login.html')
+
+@login_required
+def login_out(request):
+    logout(request)
+    return redirect('login2')
