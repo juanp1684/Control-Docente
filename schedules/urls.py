@@ -7,10 +7,9 @@ urlpatterns = [
     path('id/<int:id>', ScheduleView.as_view(), name='schedule_updates'),
     path('report/', ReportView.as_view(), name='report_creation'),
     path('login/', LoginView.as_view(), name='session login'),
-    path('admin1/login/', AdminLoginView.as_view(), name='admin session login'),
-  
-    path('home/',home, name="home"),
-    path('admin1/login/',login_user,name="login2"),
+    #path('admin/login/', AdminLoginView.as_view(), name='admin session login'), #no need for this view
+    path('home/', home, name="home"),
+    path('admin/login/',login_user,name="login2"),
     path('user/logout/', login_out,name="logout"),
     
 ]

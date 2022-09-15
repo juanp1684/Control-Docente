@@ -234,25 +234,39 @@ class AdminLoginView(View):
         response.set_cookie(key='jwt', value=token, httponly=True)
         return response
 
-    """ def get (self, request):
-        token = request.COOKIES.get('jwt')
-        if not token:
-            return failed_auth_response("Not logged in")
-        try:
-            payload = jwt.decode(token, SECRET, algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            return failed_auth_response("Session finished, log in again")
-        except jwt.InvalidSignatureError:
-            return failed_auth_response(INVALID_SESSION_MESSAGE)
+    def get (self, request):
+        # token = request.COOKIES.get('jwt')
+        # if not token:
+        #     return failed_auth_response("Not logged in")
+        # try:
+        #     payload = jwt.decode(token, SECRET, algorithms=['HS256'])
+        # except jwt.ExpiredSignatureError:
+        #     return failed_auth_response("Session finished, log in again")
+        # except jwt.InvalidSignatureError:
+        #     return failed_auth_response(INVALID_SESSION_MESSAGE)
 
-        if payload.get('admin') is None:
-            return failed_auth_response(INVALID_SESSION_MESSAGE)
+        # if payload.get('admin') is None:
+        #     return failed_auth_response(INVALID_SESSION_MESSAGE)
 
-        return HttpResponse(payload['admin']) """
+        # return HttpResponse(payload['admin'])
+        return login_user(request=request)
  
  
 
 def home(request):
+    token = request.COOKIES.get('jwt')
+    if not token:
+        return failed_auth_response("Not logged in")#change to redirect to login
+    try:
+        payload = jwt.decode(token, SECRET, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return failed_auth_response("Session finished, log in again")#change to redirect to login
+    except jwt.InvalidSignatureError:
+        return failed_auth_response(INVALID_SESSION_MESSAGE)#change to redirect to login
+
+    if payload.get('admin') is None:
+        return failed_auth_response(INVALID_SESSION_MESSAGE)#change to redirect to login
+    
     usuariosListados = User.objects.all()
     reportOmisions = Report.objects.filter(report_type='omision')
     reportErrores= Report.objects.filter(report_type='fallido')
@@ -265,12 +279,34 @@ def login_user(request):
         username=request.POST['username']
         password = request.POST['password']
         
-        techer = authenticate(request,username=username,password=password)
-        if techer:
-            login(request,techer)
-            return redirect('home')
-        else:
-            return render(request, 'registration/login.html',{'error':'Datos invalidos'})
+        admin = AdminUser.objects.filter(username=username).first()
+
+        if admin is None:
+            return failed_auth_response(message=USER_NOT_FOUND_MESSAGE)
+
+        if admin.password is None:
+            admin.password = password
+            admin.save()
+        elif not check_password(password=password, encoded=admin.password):
+            return failed_auth_response(message=INCORRECT_PASSWORD_MESSAGE)
+        
+        payload = {
+            'exp': datetime.utcnow() + timedelta(hours=16),
+            'iat': datetime.utcnow(),
+            'admin': True
+        }
+
+        token = jwt.encode(payload, SECRET)
+
+        response = redirect('home')
+        response.set_cookie(key='jwt', value=token, httponly=True, secure=True)
+        return response
+        # techer = authenticate(request,username=username,password=password)
+        # if techer:
+        #     login(request,techer)
+        #     return redirect('home')
+        # else:
+        #     return render(request, 'registration/login.html',{'error':'Datos invalidos'})
     return render(request, 'registration/login.html')
 
 @login_required
