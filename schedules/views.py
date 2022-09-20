@@ -71,10 +71,8 @@ class ScheduleView(View):
         schedules = list(Schedule.objects.filter(user_id=request_codsis).order_by(
             'day_of_week', 'start_time').values())
         if len(schedules) > 0:
-            response = {'message': f"Found Schedules for: {request_codsis}", 'schedules': schedules}
             user = User.objects.get(codsis=request_codsis)
-            user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
-            user.save()
+            response = {'message': f"Found Schedules for: {request_codsis}", 'schedules': schedules, 'last_connection': user.last_connection}
         else:
             return bad_request_response(f"Schedules missing for codsis: {request_codsis}")
 
