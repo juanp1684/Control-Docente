@@ -20,6 +20,8 @@ SCHEDULES_MISSING_MESSAGE = "Schedule missing"
 UNRELATED_SCHEDULE_MESSAGE = "Schedule not related to this user"
 REPORTS_MISSING_MESSAGE = "Report missing"
 USER_NOT_FOUND_MESSAGE = "User not found"
+NOT_LOGGED_IN_MESSAGE = "Not logged in"
+SESSION_EXPIRED_MESSAGE = "Session expired, log in again"
 INCORRECT_PASSWORD_MESSAGE = "Incorrect password"
 INVALID_SESSION_MESSAGE = "Invalid session"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
@@ -37,6 +39,20 @@ def bad_request_response(message="Invalid or missing data"):
     bad_request_response.status_code = 400
     return bad_request_response
 
+def check_user_token(token, codsis):
+    if not token:
+        return failed_auth_response(NOT_LOGGED_IN_MESSAGE)
+    try:
+        payload = jwt.decode(token, SECRET, algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return failed_auth_response(SESSION_EXPIRED_MESSAGE)
+    except jwt.InvalidSignatureError:
+        return failed_auth_response(INVALID_SESSION_MESSAGE)
+    if payload.get('codsis') is None:
+        return failed_auth_response(INVALID_SESSION_MESSAGE)
+
+    return codsis == payload['codsis']
+
 class ScheduleView(View):
 
     @method_decorator(csrf_exempt)
@@ -44,25 +60,22 @@ class ScheduleView(View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
+        token = request.COOKIES.get('jwt')
         request_codsis = request.GET.get('codsis')
-        if request_codsis != None:
-            schedules = list(Schedule.objects.filter(user_id=request_codsis).order_by(
-                'day_of_week', 'start_time').values())
-            if len(schedules) > 0:
-                response = {'message': f"Found Schedules for: {request_codsis}", 'schedules': schedules}
-                user = User.objects.get(codsis=request_codsis)
-                user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
-                user.save()
-            else:
-                return bad_request_response(f"Schedules missing for codsis: {request_codsis}")
+        authentification = check_user_token(token, request_codsis)
+
+        if (type(authentification) != bool):
+            return authentification
+        if not authentification:
+            return bad_request_response("Mismatching session and schedule request")
+        schedules = list(Schedule.objects.filter(user_id=request_codsis).order_by(
+            'day_of_week', 'start_time').values())
+        if len(schedules) > 0:
+            user = User.objects.get(codsis=request_codsis)
+            response = {'message': f"Found Schedules for: {request_codsis}", 'schedules': schedules, 'last_connection': user.last_connection}
         else:
-            schedules = list(Schedule.objects.order_by(
-                'day_of_week', 'start_time').values())
-            if len(schedules) > 0:
-                response = {'message': "Schedules found",
-                            'schedules': schedules}
-            else:
-                response = {'message': SCHEDULES_MISSING_MESSAGE}
+            return bad_request_response(f"Schedules missing for codsis: {request_codsis}")
+
         return JsonResponse(response)
 
     def post(self, request):
@@ -120,7 +133,16 @@ class ReportView(View):
         return JsonResponse(response)
 
     def post(self, request):
+        token = request.COOKIES.get('jwt')
         rb = json.loads(request.body)
+
+        authentification = check_user_token(token, rb['codsis'])
+
+        if (type(authentification) != bool):
+            return authentification
+        if not authentification:
+            return bad_request_response("Mismatching session and report request")
+
         reported_user = User.objects.filter(codsis=rb['codsis']).first()
         reported_schedule = Schedule.objects.filter(id=rb['schedule_id'], user_id=rb['codsis']).first()
         if reported_user is None:
@@ -185,11 +207,11 @@ class LoginView(View):
     def get (self, request):
         token = request.COOKIES.get('jwt')
         if not token:
-            return failed_auth_response("Not logged in")
+            return failed_auth_response(NOT_LOGGED_IN_MESSAGE)
         try:
             payload = jwt.decode(token, SECRET, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            return failed_auth_response("Session finished, log in again")
+            return failed_auth_response(SESSION_EXPIRED_MESSAGE)
         except jwt.InvalidSignatureError:
             return failed_auth_response(INVALID_SESSION_MESSAGE)
         if payload.get('codsis') is None:
@@ -233,11 +255,11 @@ class AdminLoginView(View):
     def get (self, request):
         token = request.COOKIES.get('jwt')
         if not token:
-            return failed_auth_response("Not logged in")
+            return failed_auth_response(NOT_LOGGED_IN_MESSAGE)
         try:
             payload = jwt.decode(token, SECRET, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            return failed_auth_response("Session finished, log in again")
+            return failed_auth_response(SESSION_EXPIRED_MESSAGE)
         except jwt.InvalidSignatureError:
             return failed_auth_response(INVALID_SESSION_MESSAGE)
 
