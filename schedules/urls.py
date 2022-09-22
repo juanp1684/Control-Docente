@@ -10,6 +10,5 @@ urlpatterns = [
     #path('admin/login/', AdminLoginView.as_view(), name='admin session login'), #no need for this view
     path('home/', home, name="home"),
     path('admin/login/',login_user,name="login2"),
-    path('user/logout/', login_out,name="logout"),
-    
+    path('user/logout/', login_out,name="logout")
 ]
