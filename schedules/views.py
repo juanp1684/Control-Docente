@@ -335,3 +335,6 @@ def login_user(request):
 def login_out(request):
     logout(request)
     return redirect('login2')
+
+def main_redirect(request):
+    return redirect('login2')
