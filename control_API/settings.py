@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 from pickle import TRUE
 
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-e#5*&c3%$zeh_ynvjp94ahh38_oxe2cv27toj8we1az13gi356
 SECRET = 'RG9lIiwiaWF0IjoxNTE2MjM5MDIy'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -133,8 +134,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / "static"
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATICFILES_DIRS=[
+    os.path.join(BASE_DIR,"static")
+]
+
 
 
 # Simplified static file serving.

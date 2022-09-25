@@ -274,6 +274,8 @@ def home(request):
                                      "omisiones":reportOmisions, 
                                      "fallidos":reportErrores})
 
+    
+
 def login_user(request):
     if request.method == 'POST':
         username=request.POST['username']
@@ -313,3 +315,6 @@ def login_user(request):
 def login_out(request):
     logout(request)
     return redirect('login2')
+
+def teacher_report(request):
+    return render(request,'docente.html')
