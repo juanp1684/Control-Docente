@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import ScheduleView, ReportView, LoginView, AdminLoginView,home,login_out,login_user
+from.views import ScheduleView, ReportView, LoginView, AdminLoginView,home,login_out,login_user, teacher_report
 
 
 urlpatterns = [
@@ -10,5 +10,8 @@ urlpatterns = [
     #path('admin/login/', AdminLoginView.as_view(), name='admin session login'), #no need for this view
     path('home/', home, name="home"),
     path('admin/login/',login_user,name="login2"),
-    path('user/logout/', login_out,name="logout")
+    path('user/logout/', login_out,name="logout"),
+    path('docente/',teacher_report, name="reporte"),
+   
+    
 ]
