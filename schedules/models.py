@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, is_password_usable
 from .choices import DAY_CHOICES
 
 # Create your models here.
@@ -13,7 +13,8 @@ class User(models.Model):
     password = models.CharField(max_length=255, null=True)
 
     def save(self, **kwargs):
-        self.password = make_password(self.password)
+        if(not is_password_usable(self.password)):
+            self.password = make_password(self.password)
         super().save(**kwargs)
 
     class Meta:
