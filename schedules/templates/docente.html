@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel=" stylesheet" href="{% static 'w3.css' %}" />
+
+    <script src="{% static 'lib/Highcharts-10.2.1/code/highcharts.js' %}"></script>
+    <script src="{% static 'lib/Highcharts-10.2.1/code/modules/series-label.js' %}"></script>
+    <script src="{% static 'lib/Highcharts-10.2.1/code/modules/exporting.js' %}"></script>
+    <script src="{% static 'lib/Highcharts-10.2.1/code/modules/export-data.js' %}"></script>
+    <script src="{% static 'lib/Highcharts-10.2.1/code/modules/accessibility.js' %}"></script>
+    
+
+    <title>Control docente</title>
+
+
+</head>
+
+<body >
+    <div class="w3-container w3-cell-row w3-margin-top">
+        <div class="w3-container w3-card w3-cell" style="width: 20%">
+            <img src="{%  static 'images/perfil.png' %}" alt="" style="width:100%">
+        </div>
+
+        <div class="w3-cell w3-container">
+            <div class="w3-container w3-bar w3-black ">
+                <button class="w3-bar-item w3-button" onclick="openCity('London')">Inicio</button>
+                <button class="w3-bar-item w3-button" onclick="openCity('Paris')">Errores</button>
+                <button class="w3-bar-item w3-button" onclick="openCity('Tokyo')">Omisiones</button>
+            </div>
+        </div>
+
+        <div class="w3-cell w3-container">
+            <button class="w3-red  w3-large" style="width:100%"> Reiniciar Clave</button>
+        </div>
+    </div>
+
+    <div class="w3-container w3-cell-row ">
+        <div class="w3-container w3-cell w3-margin-top">
+            <b>Datos:</b>
+            <br>
+            Nombre:
+            <br>
+            Apellidos:
+            <br>
+            Codigo Sis:
+            <br>
+            Facultad:
+            <br>
+            Carrera:
+        </div>
+        <div class="w3-container w3-margin-top w3-cell">
+            <div class="w3-center">
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <figure class="highcharts-figure">
+        <div id="container"></div>
+        <p class="Descripcion">
+         
+        </p>
+    </figure>
+
+
+    <script type="application/javascript">
+        Highcharts.chart('container', {
+
+title: {
+    text: 'Informe anual'
+},
+
+subtitle: {
+    text: "Informe"
+},
+
+yAxis: {
+    title: {
+        text: 'Cantidad de Omisiones'
+    }
+},
+
+xAxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+},
+
+legend: {
+    layout: 'vertical',
+    align: 'right',
+    verticalAlign: 'middle'
+},
+
+plotOptions: {
+   line:{
+    dataLabels: {
+                enabled: false
+   },
+   enableMouseTracking: true
+        }
+},
+
+series: [{
+    name: 'Omisiones',
+    data: [10,5,2,8,15,22,5,0,0,0,15,1]
+}, {
+    name: 'Errores',
+    data: [10,15,8,5,11,4,5,0,0,0,6,1]
+}, {
+    name: 'Verificaciones exitosas',
+    data: [10,5,12,10,15,4,20,0,0,0,0,16]
+},],
+
+responsive: {
+    rules: [{
+        condition: {
+            maxWidth:200
+        },
+        chartOptions: {
+            legend: {
+                layout: 'horizontal',
+                align: 'center',
+                verticalAlign: 'bottom'
+            }
+        }
+    }]
+}
+
+});
+    </script>
+
+
+
+</body>
+
+</html>
