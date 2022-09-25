@@ -15,6 +15,7 @@ import pytz
 import sys
 import jwt
 sys.path.append("..") # Adds higher directory to python modules path.
+from .listUtils import filter_report_list_month, filter_report_list_year
 from control_API.settings import EMAIL_HOST_USER, SECRET
 from .choices import DAY_CHOICES
 
@@ -316,6 +317,13 @@ def login_out(request):
     return redirect('login2')
 
 def teacher_report(request):
-    schedules = list(User.objects.filter(report_type='omision',condis='').values())
-    schedules = list(User.objects.filter(report_type='fallido',condis='').values())
+    request_codsis = request.GET.get('codsis')
+    all_reports = list(Report.objects.filter(codsis=request_codsis).values())
+    failed_reports = list(filter(lambda report: report.report_type == 'fallido', all_reports))
+    missed_reports = list(filter(lambda report: report.report_type == 'omision', all_reports))
+    succesful_reports = list(filter(lambda report: report.report_type == 'completado', all_reports))
+    failed_reports_by_year = filter_report_list_year(failed_reports, 2022)
+    missed_reports_by_year = filter_report_list_year(missed_reports, 2022)
+    succesful_reports_by_year = filter_report_list_year(succesful_reports, 2022)
+
     return render(request,'docente.html')
