@@ -274,7 +274,6 @@ def home(request):
                                      "omisiones":reportOmisions, 
                                      "fallidos":reportErrores})
 
-    
 
 def login_user(request):
     if request.method == 'POST':
@@ -317,4 +316,6 @@ def login_out(request):
     return redirect('login2')
 
 def teacher_report(request):
+    schedules = list(User.objects.filter(report_type='omision',condis='').values())
+    schedules = list(User.objects.filter(report_type='fallido',condis='').values())
     return render(request,'docente.html')
