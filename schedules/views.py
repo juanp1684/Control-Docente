@@ -343,12 +343,15 @@ def main_redirect(request):
 
 def teacher_report(request):
     request_codsis = request.GET.get('codsis')
-    all_reports = list(Report.objects.filter(codsis=request_codsis).values())
-    failed_reports = list(filter(lambda report: report.report_type == 'fallido', all_reports))
-    missed_reports = list(filter(lambda report: report.report_type == 'omision', all_reports))
-    succesful_reports = list(filter(lambda report: report.report_type == 'completado', all_reports))
+    all_reports = list(Report.objects.filter(user_id=request_codsis).values())
+    failed_reports = list(filter(lambda report: report['report_type'] == 'fallido', all_reports))
+    missed_reports = list(filter(lambda report: report['report_type'] == 'omision', all_reports))
+    succesful_reports = list(filter(lambda report: report['report_type'] == 'completado', all_reports))
     failed_reports_by_year = filter_report_list_year(failed_reports, 2022)
     missed_reports_by_year = filter_report_list_year(missed_reports, 2022)
     succesful_reports_by_year = filter_report_list_year(succesful_reports, 2022)
+    failed_reports_by_month = filter_report_list_month(failed_reports, 9,2022)
+    missed_reports_by_month = filter_report_list_month(missed_reports, 9,2022)
+    succesful_reports_by_month = filter_report_list_month(succesful_reports, 9,2022)
 
     return render(request,'docente.html')
