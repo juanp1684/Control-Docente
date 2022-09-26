@@ -33,7 +33,8 @@
             <tbody>
               {% for c in usuarios %}
               <tr>
-                <td> <a href="../docente/"> {{c.codsis}}</a> </td>
+                <td> <b class="w3-hover-blue" onclick="abrirDocente( {{c.codsis}})"> {{c.codsis}}</b></td>
+            
                 <td>{{c.full_name}}</td>
                 <td>{{c.faculty}}</td>
               </tr>
@@ -100,6 +101,12 @@
     <button type="submit" class="w3-red">Continue</button>
   </form>
 
+  <script type="application/javascript">
+    function abrirDocente(codsis){
+      location.href= "http://127.0.0.1:8000/schedules/docente/?codsis="+codsis;
+     
+    }
+  </script>
 </body>
 
 </html>

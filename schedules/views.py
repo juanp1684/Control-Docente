@@ -1,4 +1,5 @@
 
+from unicodedata import name
 from django.views import View
 from .models import Schedule, AdminUser, User, Report
 from django.contrib.auth.hashers import check_password
@@ -343,6 +344,9 @@ def main_redirect(request):
 
 def teacher_report(request):
     request_codsis = request.GET.get('codsis')
+    user = User.objects.get(codsis=request_codsis)
+    
+    
     all_reports = list(Report.objects.filter(user_id=request_codsis).values())
     failed_reports = list(filter(lambda report: report['report_type'] == 'fallido', all_reports))
     missed_reports = list(filter(lambda report: report['report_type'] == 'omision', all_reports))
@@ -354,4 +358,10 @@ def teacher_report(request):
     missed_reports_by_month = filter_report_list_month(missed_reports, 9,2022)
     succesful_reports_by_month = filter_report_list_month(succesful_reports, 9,2022)
 
-    return render(request,'docente.html')
+    return render(request,'docente.html',{"failed_reports_by_year":failed_reports_by_year,
+                                           "missed_reports_by_year":missed_reports_by_year,
+                                           "succesful_reports_by_year":succesful_reports_by_year,
+                                           "failed_reports_by_month":failed_reports_by_month,
+                                           "missed_reports_by_month":missed_reports_by_month,
+                                           "succesful_reports_by_month":succesful_reports_by_month ,
+                                           "user":user})
