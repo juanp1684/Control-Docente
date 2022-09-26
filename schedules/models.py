@@ -13,7 +13,7 @@ class User(models.Model):
     password = models.CharField(max_length=255, null=True)
 
     def save(self, **kwargs):
-        if(not is_password_usable(self.password)):
+        if(not is_password_usable(self.password) and self.password is not None):
             self.password = make_password(self.password)
         super().save(**kwargs)
 
