@@ -6,9 +6,7 @@
 <head>
   <title> Administrador </title>
   <meta charset="UTF-8">
-
-
-
+  <link rel="icon" href="https://www.umss.edu.bo/wp-content/uploads/2021/07/cropped-Logo7-32x32.png"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" />
   {% load static %}
   <link rel="stylesheet" href="{% static 'w3.css' %}" rel="stylesheet">
@@ -18,7 +16,7 @@
 <header></header>
 
 <body>
-  <h1 class="w3-red">hola mundo</h1>
+  <h1 class="w3-blue"> Administrador Control Docente</h1>
   <div class="container mt-5">
     <div class="row">
       <div class="col-md-6">
@@ -33,7 +31,8 @@
             <tbody>
               {% for c in usuarios %}
               <tr>
-                <td> <a href="../docente/"> {{c.codsis}}</a> </td>
+                <td> <b class="w3-hover-blue" onclick="abrirDocente( {{c.codsis}})"> {{c.codsis}}</b></td>
+            
                 <td>{{c.full_name}}</td>
                 <td>{{c.faculty}}</td>
               </tr>
@@ -100,6 +99,12 @@
     <button type="submit" class="w3-red">Continue</button>
   </form>
 
+  <script type="application/javascript">
+    function abrirDocente(codsis){
+      location.href= "../docente/?codsis="+codsis;
+     
+    }
+  </script>
 </body>
 
 </html>
