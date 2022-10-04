@@ -10,7 +10,7 @@ class User(models.Model):
     faculty = models.CharField(max_length=50)# later could be changed to a stringSet()
     contact_mail = models.CharField(max_length=60)
     last_connection = models.DateTimeField()
-    password = models.CharField(max_length=255, null=True)
+    password = models.CharField(max_length=255, null=True, default=None)
 
     def save(self, **kwargs):
         if(not is_password_usable(self.password) and self.password is not None):
@@ -35,17 +35,18 @@ class Report(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.DO_NOTHING, to_field="id")
     report_time = models.DateTimeField()
     attempts = models.PositiveSmallIntegerField()
-    report_type = models.CharField(max_length=30)# later could be changed to a stringSet ("Succesful", "Failed", "Missed", "Excused")
+    report_type = models.CharField(max_length=30)# later could be changed to a stringSet ("Succesful", "Failed", "Missed", "Excused") last one still in consideration
 
     class Meta:
         db_table = 'report'
 
 class AdminUser(models.Model):
     username = models.CharField(max_length=40, primary_key=True)
-    password = models.CharField(max_length=255, null=True)
+    password = models.CharField(max_length=255, null=True, default=None)
 
     def save(self, **kwargs):
-        self.password = make_password(self.password)
+        if(not is_password_usable(self.password) and self.password is not None):
+            self.password = make_password(self.password)
         super().save(**kwargs)
 
     class Meta:
