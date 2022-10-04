@@ -31,7 +31,7 @@ SESSION_EXPIRED_MESSAGE = "Session expired, log in again"
 INCORRECT_PASSWORD_MESSAGE = "Incorrect password"
 INVALID_SESSION_MESSAGE = "Invalid session"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
-MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {}"
+MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {} materia: {} facultad: {}"
 FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
 BOLIVIA_TIMEZONE = pytz.timezone('America/La_Paz')
 
@@ -165,7 +165,8 @@ class ReportView(View):
                 from_email=EMAIL_HOST_USER)
         elif (rb['report_type'] == "omision"):
             send_mail(subject=REPORT_MAIL_SUBJECT,
-                message=MISSED_REPORT_MAIL_MESSAGE.format(report.pk, reported_schedule.start_time, reported_schedule.end_time, DAY_CHOICES[reported_schedule.day_of_week][1]),
+                message=MISSED_REPORT_MAIL_MESSAGE.format(report.pk, reported_schedule.start_time, reported_schedule.end_time,
+                                    DAY_CHOICES[reported_schedule.day_of_week][1], reported_schedule.subject, reported_user.faculty),
                 recipient_list=[reported_user.contact_mail], from_email=EMAIL_HOST_USER)
         reported_user.last_connection = datetime.now(BOLIVIA_TIMEZONE)
         reported_user.save()
