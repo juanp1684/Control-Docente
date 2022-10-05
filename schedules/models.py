@@ -16,7 +16,8 @@ class User(models.Model):
         if (self.password is None):
             super().save(**kwargs)
             return
-        if(not is_password_usable(self.password)):
+        print(is_password_usable(self.password))
+        if(not self.password.startswith('pbkdf2_sha256')):
             self.password = make_password(self.password)
         super().save(**kwargs)
 
@@ -51,7 +52,7 @@ class AdminUser(models.Model):
         if (self.password is None):
             super().save(**kwargs)
             return
-        if(not is_password_usable(self.password)):
+        if(not self.password.startswith('pbkdf2_sha256')):
             self.password = make_password(self.password)
         super().save(**kwargs)
 
