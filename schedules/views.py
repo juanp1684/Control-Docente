@@ -1,5 +1,3 @@
-
-from unicodedata import name
 from django.views import View
 from .models import Schedule, AdminUser, User, Report
 from django.contrib.auth.hashers import check_password
@@ -9,8 +7,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate,login,logout
+from django.contrib.auth import logout
+from django.urls import reverse
 from datetime import datetime, timedelta
+from urllib.parse import urlencode
 import json
 import pytz
 import sys
@@ -29,6 +29,7 @@ USER_NOT_FOUND_MESSAGE = "User not found"
 NOT_LOGGED_IN_MESSAGE = "Not logged in"
 SESSION_EXPIRED_MESSAGE = "Session expired, log in again"
 INCORRECT_PASSWORD_MESSAGE = "Incorrect password"
+LOG_IN_AGAIN_MESSAGE = 'Session finished, log in again'
 INVALID_SESSION_MESSAGE = "Invalid session"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"
 MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {} materia: {} facultad: {}"
@@ -226,7 +227,7 @@ class LoginView(View):
 
         return HttpResponse(payload['codsis'])
 
-class AdminLoginView(View):
+class AdminLoginView(View):# May need to be deleted, or only used for testing with a rest client 
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -276,21 +277,25 @@ class AdminLoginView(View):
         # return HttpResponse(payload['admin'])
         return login_user(request=request)
  
- 
+def create_login_redirect_with_message(message):
+    query_string = urlencode({'message': message})
+    response = redirect('login')
+    response['Location'] += '?' + query_string
+    return response
 
 def home(request):
     token = request.COOKIES.get('jwt')
     if not token:
-        return failed_auth_response("Not logged in")# change to redirect to login
+        return create_login_redirect_with_message('No session found')
     try:
         payload = jwt.decode(token, SECRET, algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
-        return failed_auth_response("Session finished, log in again")# change to redirect to login
+        return create_login_redirect_with_message(LOG_IN_AGAIN_MESSAGE)
     except jwt.InvalidSignatureError:
-        return failed_auth_response(INVALID_SESSION_MESSAGE)# change to redirect to login
+        return create_login_redirect_with_message(INVALID_SESSION_MESSAGE)
 
     if payload.get('admin') is None:
-        return failed_auth_response(INVALID_SESSION_MESSAGE)# change to redirect to login
+        return create_login_redirect_with_message(INVALID_SESSION_MESSAGE)
     
     usuariosListados = User.objects.all()
     reportOmisions = Report.objects.filter(report_type='omision')
@@ -308,13 +313,13 @@ def login_user(request):
         admin = AdminUser.objects.filter(username=username).first()
 
         if admin is None:
-            return failed_auth_response(message=USER_NOT_FOUND_MESSAGE)
+            return create_login_redirect_with_message(USER_NOT_FOUND_MESSAGE)  
 
         if admin.password is None:
             admin.password = password
             admin.save()
         elif not check_password(password=password, encoded=admin.password):
-            return failed_auth_response(message=INCORRECT_PASSWORD_MESSAGE)
+            return create_login_redirect_with_message(INCORRECT_PASSWORD_MESSAGE)  
         
         payload = {
             'exp': datetime.utcnow() + timedelta(hours=16),
@@ -327,21 +332,16 @@ def login_user(request):
         response = redirect('home')
         response.set_cookie(key='jwt', value=token, httponly=True, secure=True)
         return response
-        # techer = authenticate(request,username=username,password=password)
-        # if techer:
-        #     login(request,techer)
-        #     return redirect('home')
-        # else:
-        #     return render(request, 'registration/login.html',{'error':'Datos invalidos'})
-    return render(request, 'registration/login.html')
+    message = request.GET.get('message')
+    return render(request, 'registration/login.html', {'error': message})
 
 @login_required
 def login_out(request):
     logout(request)
-    return redirect('login2')
+    return redirect('login')
 
 def main_redirect(request):
-    return redirect('login2')
+    return redirect('login')
 
 def teacher_report(request):
     request_codsis = request.GET.get('codsis')
