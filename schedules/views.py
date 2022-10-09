@@ -35,6 +35,7 @@ REPORT_MAIL_SUBJECT = "Aplicacion control docente"
 MISSED_REPORT_MAIL_MESSAGE = "Se detecto la omision de una clase y se genero el respectivo reporte.\nSi desea presentar un motivo para esta falta debe informar que el id asociado a este reporte es el nro. {}\nHorario: {} a {} dia: {} materia: {} facultad: {}"
 FAILED_REPORT_MAIL_MESSAGE = "Parece que tuvo problemas para completar la tarea de control, ya se realizo el reporte correspondiente.\nDe ser este un problema consistente un administrador se contactara con usted"
 BOLIVIA_TIMEZONE = pytz.timezone('America/La_Paz')
+LOGIN_HTML = 'registration/login.html'
 
 def failed_auth_response(message="You are not authenticated"):
     failed_auth_response = JsonResponse({'message': message})
@@ -313,13 +314,13 @@ def login_user(request):
         admin = AdminUser.objects.filter(username=username).first()
 
         if admin is None:
-            return create_login_redirect_with_message(USER_NOT_FOUND_MESSAGE)  
+            return render(request, LOGIN_HTML,{'error':USER_NOT_FOUND_MESSAGE})  
 
         if admin.password is None:
             admin.password = password
             admin.save()
         elif not check_password(password=password, encoded=admin.password):
-            return create_login_redirect_with_message(INCORRECT_PASSWORD_MESSAGE)  
+            return render(request, LOGIN_HTML,{'error':INCORRECT_PASSWORD_MESSAGE})  
         
         payload = {
             'exp': datetime.utcnow() + timedelta(hours=16),
@@ -333,7 +334,7 @@ def login_user(request):
         response.set_cookie(key='jwt', value=token, httponly=True, secure=True)
         return response
     message = request.GET.get('message')
-    return render(request, 'registration/login.html', {'error': message})
+    return render(request, LOGIN_HTML, {'error': message})
 
 @login_required
 def login_out(request):
