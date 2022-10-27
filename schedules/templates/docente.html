@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+
 <html lang="en">
 
 <head>
@@ -22,7 +23,12 @@
 
 </head>
 
-<body onload="fillCharts()">
+<body onload = "fillCharts({{failed_reports_by_year}},
+                        {{missed_reports_by_year}},
+                        {{succesful_reports_by_year}},
+                        {{failed_reports_by_month}},
+                        {{missed_reports_by_month}},
+                        {{succesful_reports_by_month}})">
     <div class="w3-container w3-cell-row w3-margin-top">
         <div class="w3-container w3-card w3-cell" style="width: 20%">
             
@@ -38,7 +44,7 @@
         </div>
 
         <div class="w3-cell w3-container">
-            <button class="w3-red  w3-large" style="width:100%"> Reiniciar Clave</button>
+            <button class="w3-red  w3-large" style="width:100%" onclick = "resetPassword()"> Reiniciar Clave</button>
         </div>
     </div>
 
@@ -64,6 +70,31 @@
         </div>
 
     </div>
+    <div>
+        <select name="year" id="selectYear" onchange = "getDataCharts()">
+            <option value=2020>2020</option>
+            <option value=2021>2021</option>
+            <option value=2022>2022</option>
+
+        </select>
+
+        <select name="month" id="selectMonth" onchange = "getDataCharts()">
+            <option value=1>Enero</option>
+            <option value=2>Febrero</option>
+            <option value=3>Marzo</option>
+            <option value=4>Abril</option>
+            <option value=5>Mayo</option>
+            <option value=6>Junio</option>
+            <option value=7>Julio</option>
+            <option value=8>Agosto</option>
+            <option value=9>Septiembre</option>
+            <option value=10>Octubre</option>
+            <option value=11>Noviembre</option>
+            <option value=12>Diciembre</option>
+
+        </select>
+   </div>
+
 
     <figure class="highcharts-figure">
         <div id="container"></div>
@@ -81,7 +112,30 @@
 
 
     <script type="application/javascript">
-        function fillCharts(){
+        finction resetPassword(){
+            
+        }
+        function getDataCharts(){
+            year = document.getElementById("selectYear").value
+            month = document.getElementById("selectMonth").value
+            alert("Año: "+year + "\nMes: "+ month);
+
+            fillCharts({{failed_reports_by_year}},
+                        {{missed_reports_by_year}},
+                        {{succesful_reports_by_year}},
+                        {{failed_reports_by_month}},
+                        {{missed_reports_by_month}},
+                        {{succesful_reports_by_month}});
+            
+        }
+
+        function fillCharts(failed_reports_by_year,
+        missed_reports_by_year,
+        succesful_reports_by_year,
+        failed_reports_by_month,
+        missed_reports_by_month,
+        succesful_reports_by_month){
+            console.log(failed_reports_by_year);
         Highcharts.chart('container', {
 
 title: {
@@ -125,13 +179,13 @@ plotOptions: {
 
 series: [{
     name: 'Omisiones',
-    data: {{ missed_reports_by_year }}
+    data: missed_reports_by_year 
 }, {
     name: 'Errores',
-    data: {{failed_reports_by_year}}
+    data: failed_reports_by_year
 }, {
     name: 'Verificaciones exitosas',
-    data: {{succesful_reports_by_year}}
+    data: succesful_reports_by_year
 },],
 
 responsive: {
@@ -201,13 +255,13 @@ plotOptions: {
 
 series: [{
     name: 'Omisiones',
-    data: {{ missed_reports_by_month }}
+    data:  missed_reports_by_month 
 }, {
     name: 'Errores',
-    data: {{failed_reports_by_month}}
+    data: failed_reports_by_month
 }, {
     name: 'Verificaciones exitosas',
-    data: {{succesful_reports_by_month}}
+    data: succesful_reports_by_month
 },],
 
 responsive: {
