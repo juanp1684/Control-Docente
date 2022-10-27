@@ -299,8 +299,8 @@ def home(request):
         return create_login_redirect_with_message(INVALID_SESSION_MESSAGE)
     
     usuariosListados = User.objects.all()
-    reportOmisions = Report.objects.filter(report_type='omision')
-    reportErrores= Report.objects.filter(report_type='fallido')
+    reportOmisions = Report.objects.filter(report_type='omision').order_by("-report_time")
+    reportErrores= Report.objects.filter(report_type='fallido').order_by("-report_time")
     return render(request,"feed.html",{"usuarios": usuariosListados,
                                      "omisiones":reportOmisions,
                                      "fallidos":reportErrores})

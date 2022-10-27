@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 
 <head>
@@ -6,7 +7,7 @@
     <link rel="icon" href="https://www.umss.edu.bo/wp-content/uploads/2021/07/cropped-Logo7-32x32.png"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% load static %}
+    
     <link rel=" stylesheet" href="{% static 'w3.css' %}" />
 
     <script src="{% static 'lib/Highcharts-10.2.1/code/highcharts.js' %}"></script>
@@ -21,10 +22,10 @@
 
 </head>
 
-<body >
+<body onload="fillCharts()">
     <div class="w3-container w3-cell-row w3-margin-top">
         <div class="w3-container w3-card w3-cell" style="width: 20%">
-            {% load static %}
+            
             <img src="{%  static 'images/perfil.png' %}" alt="" style="width:100%">
         </div>
 
@@ -80,6 +81,7 @@
 
 
     <script type="application/javascript">
+        function fillCharts(){
         Highcharts.chart('container', {
 
 title: {
@@ -148,10 +150,10 @@ responsive: {
 }
 
 });
-    </script>
+    
 
 
-<script type="application/javascript">
+
         Highcharts.chart('container2', {
 
 title: {
@@ -224,6 +226,7 @@ responsive: {
 }
 
 });
+                 }
     </script>
 
 </body>
