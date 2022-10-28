@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.urls import reverse
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 import json
@@ -16,7 +15,7 @@ import pytz
 import sys
 import jwt
 sys.path.append("..") # Adds higher directory to python modules path.
-from .listUtils import filter_report_list_month, filter_report_list_year
+from .templatetags.listUtils import create_reports_count_lists
 from control_API.settings import EMAIL_HOST_USER, SECRET
 from .choices import DAY_CHOICES
 
@@ -347,24 +346,18 @@ def main_redirect(request):
 def teacher_report(request):
     request_codsis = request.GET.get('codsis')
     user = User.objects.get(codsis=request_codsis)
-    today = datetime.now(BOLIVIA_TIMEZONE)
-    year = today.year
-    month = today.month 
+    if request.method == 'POST':
+        year = int(request.POST['year'])
+        month = int(request.POST['month']) 
+    else:
+        today = datetime.now(BOLIVIA_TIMEZONE)
+        year = today.year
+        month = today.month
     all_reports = list(Report.objects.filter(user_id=request_codsis).values())
-    failed_reports = list(filter(lambda report: report['report_type'] == 'fallido', all_reports))
-    missed_reports = list(filter(lambda report: report['report_type'] == 'omision', all_reports))
-    succesful_reports = list(filter(lambda report: report['report_type'] == 'completado', all_reports))
-    failed_reports_by_year = filter_report_list_year(failed_reports, year)
-    missed_reports_by_year = filter_report_list_year(missed_reports, year)
-    succesful_reports_by_year = filter_report_list_year(succesful_reports, year)
-    failed_reports_by_month = filter_report_list_month(failed_reports, month, year)
-    missed_reports_by_month = filter_report_list_month(missed_reports, month, year)
-    succesful_reports_by_month = filter_report_list_month(succesful_reports, month, year)
+    report_counts_by_year_month = create_reports_count_lists(all_reports, year, month)
 
-    return render(request,'docente.html',{"failed_reports_by_year":failed_reports_by_year,
-                                           "missed_reports_by_year":missed_reports_by_year,
-                                           "succesful_reports_by_year":succesful_reports_by_year,
-                                           "failed_reports_by_month":failed_reports_by_month,
-                                           "missed_reports_by_month":missed_reports_by_month,
-                                           "succesful_reports_by_month":succesful_reports_by_month ,
-                                           "user":user})
+    return render(request,'docente.html',{"report_count_lists": report_counts_by_year_month,
+                                            "all_reports": all_reports,
+                                           "user":user,
+                                           "month": month,
+                                           "year": year})

@@ -1,5 +1,6 @@
-<!DOCTYPE html>
 {% load static %}
+{% load listUtils %}
+<!DOCTYPE html>
 
 <html lang="en">
 
@@ -23,12 +24,7 @@
 
 </head>
 
-<body onload = "fillCharts({{failed_reports_by_year}},
-                        {{missed_reports_by_year}},
-                        {{succesful_reports_by_year}},
-                        {{failed_reports_by_month}},
-                        {{missed_reports_by_month}},
-                        {{succesful_reports_by_month}})">
+<body onload = "fillCharts({{report_count_lists}})">
     <div class="w3-container w3-cell-row w3-margin-top">
         <div class="w3-container w3-card w3-cell" style="width: 20%">
             
@@ -71,28 +67,32 @@
 
     </div>
     <div>
-        <select name="year" id="selectYear" onchange = "getDataCharts()">
-            <option value=2020>2020</option>
-            <option value=2021>2021</option>
-            <option value=2022>2022</option>
+        <form action="" method="POST" id="chart form">
+            {% csrf_token %}
+            <select name="year" id="selectYear" onchange = "changeChartsData()">
+                <option value=2022>2022</option>
+                <option value=2021>2021</option>
+                <option value=2020>2020</option>
 
-        </select>
+            </select>
 
-        <select name="month" id="selectMonth" onchange = "getDataCharts()">
-            <option value=1>Enero</option>
-            <option value=2>Febrero</option>
-            <option value=3>Marzo</option>
-            <option value=4>Abril</option>
-            <option value=5>Mayo</option>
-            <option value=6>Junio</option>
-            <option value=7>Julio</option>
-            <option value=8>Agosto</option>
-            <option value=9>Septiembre</option>
-            <option value=10>Octubre</option>
-            <option value=11>Noviembre</option>
-            <option value=12>Diciembre</option>
+            <select name="month" id="selectMonth" onchange = "changeChartsData()">
+                <option value=1>Enero</option>
+                <option value=2>Febrero</option>
+                <option value=3>Marzo</option>
+                <option value=4>Abril</option>
+                <option value=5>Mayo</option>
+                <option value=6>Junio</option>
+                <option value=7>Julio</option>
+                <option value=8>Agosto</option>
+                <option value=9>Septiembre</option>
+                <option value=10>Octubre</option>
+                <option value=11>Noviembre</option>
+                <option value=12>Diciembre</option>
 
-        </select>
+            </select>
+            <button type="submit">Go</button>
+        </form>
    </div>
 
 
@@ -112,31 +112,17 @@
 
 
     <script type="application/javascript">
-        finction resetPassword(){
+        function resetPassword(){
             
         }
-        function getDataCharts(){
-            year = document.getElementById("selectYear").value
-            month = document.getElementById("selectMonth").value
-            alert("Año: "+year + "\nMes: "+ month);
-
-            fillCharts({{failed_reports_by_year}},
-                        {{missed_reports_by_year}},
-                        {{succesful_reports_by_year}},
-                        {{failed_reports_by_month}},
-                        {{missed_reports_by_month}},
-                        {{succesful_reports_by_month}});
-            
+        function changeChartsData(){
+            //document.getElementById("chart form").submit()
         }
 
-        function fillCharts(failed_reports_by_year,
-        missed_reports_by_year,
-        succesful_reports_by_year,
-        failed_reports_by_month,
-        missed_reports_by_month,
-        succesful_reports_by_month){
-            console.log(failed_reports_by_year);
-        Highcharts.chart('container', {
+        function fillCharts(countLists){
+            document.getElementById("selectYear").value = {{ year }}
+            document.getElementById("selectMonth").value = {{ month }}
+            Highcharts.chart('container', {
 
 title: {
     text: 'Informe anual'
@@ -179,13 +165,13 @@ plotOptions: {
 
 series: [{
     name: 'Omisiones',
-    data: missed_reports_by_year 
+    data: countLists[1] 
 }, {
     name: 'Errores',
-    data: failed_reports_by_year
+    data: countLists[0]
 }, {
     name: 'Verificaciones exitosas',
-    data: succesful_reports_by_year
+    data: countLists[2]
 },],
 
 responsive: {
@@ -255,13 +241,13 @@ plotOptions: {
 
 series: [{
     name: 'Omisiones',
-    data:  missed_reports_by_month 
+    data:  countLists[4] 
 }, {
     name: 'Errores',
-    data: failed_reports_by_month
+    data: countLists[3]
 }, {
     name: 'Verificaciones exitosas',
-    data: succesful_reports_by_month
+    data: countLists[5]
 },],
 
 responsive: {
