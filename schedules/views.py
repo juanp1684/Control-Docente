@@ -24,10 +24,10 @@ from .choices import DAY_CHOICES
 SCHEDULES_MISSING_MESSAGE = "Schedule missing"
 UNRELATED_SCHEDULE_MESSAGE = "Schedule not related to this user"
 REPORTS_MISSING_MESSAGE = "Report missing"
-USER_NOT_FOUND_MESSAGE = "User not found"
+USER_NOT_FOUND_MESSAGE = "Usuario incorrecto"
 NOT_LOGGED_IN_MESSAGE = "Not logged in"
 SESSION_EXPIRED_MESSAGE = "Session expired, log in again"
-INCORRECT_PASSWORD_MESSAGE = "Incorrect password"
+INCORRECT_PASSWORD_MESSAGE = "Contraseña incorrecta"
 LOG_IN_AGAIN_MESSAGE = 'Session finished, log in again'
 INVALID_SESSION_MESSAGE = "Invalid session"
 REPORT_MAIL_SUBJECT = "Aplicacion control docente"

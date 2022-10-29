@@ -1,55 +1,60 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="https://www.umss.edu.bo/wp-content/uploads/2021/07/cropped-Logo7-32x32.png"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel=" stylesheet" href="{% static 'w3.css' %}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Admin login</title>
 </head>
-<body>
-    <form action="" method="POST">
+<body class="w3-display-container" style="height:100vh;">
+   
+<div class = " w3-display-middle">
+  <div class="login   w3-card-4 w3-animate-zoom w3-round-large "
+    style="width:30%;max-width:400px;min-width:400px; ">
+
+    <div class="w3-center"><br>
+        <img src="{%  static 'images/logo.png' %}" alt="logoUMSS" style="width:30%" class="w3-circle w3-margin-top">
+        <hr>
+    </div>
+
+    <form class="w3-container" method="POST" action="">
         {% csrf_token %}
-        <center>
-            <div class="container">
-                 {% if error %}
-                   <p class="alert alert-danger" style="color: red; font-size: 200%">{{ error }}</p>
-                 {% endif %}
-                <h1>Inicio de Sesion</h1>
-                <table callpadding="5" cellspacing="2" border="1">
-                    <thead>
-                        <tr>
-                            <th colspan="2" align="center">Formulario Login</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Ingrese su correo Electronico</td>
-                            <td><input type="text" placeholder="Ingrese su correo electrónico" name="username"></td>
-                        </tr>
 
-                        
-                            <td>Password</td>
-                            <td><input type="password" placeholder="Ingrese su constraseña" name="password"></td>
-                        </tr>
+        {% if error %}
+        <p class="alert alert-danger" style="color: red; font-size: 200%">{{ error }}</p>
+        {% endif %}
+        <div class="w3-center w3-xlarge">
+            <label><b>Inicio de sesión</b></label>
+        </div>
+        <div class="w3-section">
 
-                        <tr>
-                            <td colspan="2" align="center">
-                                <button type="submit">Login</button>
-                                &nbsp;&nbsp;
-                                <button type="reset">Limpiar</button>
-                            </td>
-                        </tr>
-                    </tbody>
+            <label><b>Correo electrónico</b></label>
+            <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Ingrese su correo"
+                name="username" required><br>
 
-                </table>
-                {% if messages %}
+            <label><b>Contraseña</b></label>
+            <input class="w3-input w3-border" type="password" placeholder="Ingrese su contraseña" name="password"
+                required><br>
+
+            <div class="w3-section w3-content w3-center">
+                <button class="w3-button w3-text-white  w3-padding w3-blue w3-round-large" type="submit"
+                    style="width: 70%">Ingresar</button>
+            </div>
+            {% if messages %}
                    {% for msg in messages%}
                    <b>{{msg}}</b>
                    {% endfor %}
                    {% endif %}
-            </div>
-        </center>
+        </div>
     </form>
+
+
+  
+  </div>
+</div>
 </body>
 </html>
